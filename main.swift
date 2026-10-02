@@ -346,6 +346,11 @@ func renderSkinsPreview(to path: String) {
 }
 
 let arguments = CommandLine.arguments
+if arguments.contains("--install-hooks") || arguments.contains("--uninstall-hooks") {
+    let error = arguments.contains("--install-hooks") ? Hooks.install() : Hooks.uninstall()
+    print(error ?? "ok")
+    exit(error == nil ? 0 : 1)
+}
 if let i = arguments.firstIndex(of: "--preview-skins"), i + 1 < arguments.count {
     renderSkinsPreview(to: arguments[i + 1])
     exit(0)

@@ -356,7 +356,11 @@ final class HookServer {
 // MARK: - Branchement dans ~/.claude/settings.json
 
 enum Hooks {
-    static let settings = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".claude/settings.json")
+    // LUTINS_SETTINGS_FILE et LUTINS_NO_JQ servent à tester le branchement sur une copie, sans jq.
+    static let settings = ProcessInfo.processInfo.environment["LUTINS_SETTINGS_FILE"].map { URL(fileURLWithPath: $0) }
+        ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".claude/settings.json")
+    private static let jq = ProcessInfo.processInfo.environment["LUTINS_NO_JQ"] == nil
+        && FileManager.default.isExecutableFile(atPath: "/usr/bin/jq") ? "/usr/bin/jq" : nil
     static let marker = "127.0.0.1:\(hookPort)/hook/"
     static let events = ["UserPromptSubmit", "PreToolUse", "PostToolUse", "PermissionRequest", "Notification", "Stop", "SessionEnd"]
 
@@ -396,7 +400,8 @@ enum Hooks {
         return rewrite(filter, commands: [:])
     }
 
-    /// Passe settings.json dans jq (qui garde l'ordre des clés) puis l'écrit d'un coup. Renvoie une erreur ou nil.
+    /// Réécrit settings.json d'un coup : avec jq (macOS 15+, garde l'ordre des clés), sinon en Swift.
+    /// `commands` vide = débrancher. Renvoie une erreur ou nil.
     private static func rewrite(_ filter: String, commands: [String: String]) -> String? {
         let fm = FileManager.default
         try? fm.createDirectory(at: settings.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -404,10 +409,10 @@ enum Hooks {
         let backup = settings.appendingPathExtension("lutins-backup")
         if !fm.fileExists(atPath: backup.path) { try? fm.copyItem(at: settings, to: backup) }
 
-        guard let cmds = try? JSONSerialization.data(withJSONObject: commands),
-              fm.isExecutableFile(atPath: "/usr/bin/jq") else { return "jq introuvable" }
+        guard let jq else { return rewriteInSwift(commands: commands) }
+        guard let cmds = try? JSONSerialization.data(withJSONObject: commands) else { return "commandes invalides" }
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/jq")
+        process.executableURL = URL(fileURLWithPath: jq)
         process.arguments = ["--arg", "marker", marker, "--argjson", "cmds", String(decoding: cmds, as: UTF8.self), filter, settings.path]
         let out = Pipe(), err = Pipe()
         process.standardOutput = out
@@ -420,6 +425,43 @@ enum Hooks {
             return String(decoding: errors, as: UTF8.self)
         }
         do { try data.write(to: settings, options: .atomic) } catch { return error.localizedDescription }
+        return nil
+    }
+
+    /// Même chose que les filtres jq, pour les Mac sans jq (macOS 13 et 14).
+    private static func rewriteInSwift(commands: [String: String]) -> String? {
+        guard let data = try? Data(contentsOf: settings),
+              let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            return "\(settings.path) n'est pas un JSON valide"
+        }
+        func strip(_ groups: [Any]) -> [Any] {
+            groups.compactMap { item -> Any? in
+                guard var group = item as? [String: Any] else { return item }
+                let kept = (group["hooks"] as? [Any] ?? []).filter {
+                    !(($0 as? [String: Any])?["command"] as? String ?? "").contains(marker)
+                }
+                if kept.isEmpty { return nil }
+                group["hooks"] = kept
+                return group
+            }
+        }
+        var result = root
+        var hooks = (root["hooks"] as? [String: Any] ?? [:]).mapValues { strip($0 as? [Any] ?? []) as Any }
+        if commands.isEmpty {
+            hooks = hooks.filter { !(($0.value as? [Any])?.isEmpty ?? true) }
+        } else {
+            for (event, command) in commands {
+                let group: [String: Any] = ["matcher": "*", "hooks": [["type": "command", "command": command, "async": true, "timeout": 5]]]
+                hooks[event] = (hooks[event] as? [Any] ?? []) + [group]
+            }
+        }
+        if hooks.isEmpty && commands.isEmpty { result["hooks"] = nil } else { result["hooks"] = hooks }
+        do {
+            let out = try JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+            try (out + Data("\n".utf8)).write(to: settings, options: .atomic)
+        } catch {
+            return error.localizedDescription
+        }
         return nil
     }
 }

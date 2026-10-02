@@ -375,23 +375,21 @@
 <section id="installer">
   <div class="wrap">
     <p class="kicker pixel">Installer</p>
-    <h2>Trois minutes, une commande.</h2>
+    <h2>Une ligne à coller, c'est tout.</h2>
     <div class="steps">
       <div class="card step">
         <h3>Ce qu'il te faut</h3>
         <ul>
-          <li>macOS 13 ou plus récent</li>
+          <li>Un Mac avec macOS 13 ou plus récent</li>
           <li>Claude Code (app Claude, terminal ou VS Code)</li>
-          <li>Les outils de développement d'Apple :</li>
+          <li>Les outils de développement d'Apple : l'installateur te les propose s'ils manquent</li>
         </ul>
-        <div class="code"><span class="p">$ </span>xcode-select --install</div>
       </div>
       <div class="card step">
-        <h3>Installe Lutins</h3>
-        <p>L'app est compilée sur ton Mac puis copiée dans <code>~/Applications</code>.</p>
-        <div class="code" id="install-code"><button class="copy" type="button" data-copy="install">Copier</button><span class="p">$ </span>git clone https://github.com/lucasjanvierpro-oss/lutins.git
-<span class="p">$ </span>cd lutins
-<span class="p">$ </span>./build.sh --install</div>
+        <h3>Colle cette ligne dans le Terminal</h3>
+        <p>Ouvre l'app <b>Terminal</b> (⌘ Espace, « Terminal »), colle, puis Entrée. L'app est compilée sur ton Mac et copiée dans <code>~/Applications</code>.</p>
+        <div class="code" id="install-code"><button class="copy" type="button" data-copy="install">Copier</button><span class="p">$ </span>curl -fsSL https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/install.sh | bash</div>
+        <p style="margin-top:10px">S'il manque les outils d'Apple, accepte leur installation puis relance la même ligne.</p>
       </div>
       <div class="card step">
         <h3>C'est tout</h3>
@@ -688,7 +686,7 @@ if (reduceMotion) {
 }
 
 document.querySelectorAll(".copy").forEach(button => button.addEventListener("click", async () => {
-  const text = "git clone https://github.com/lucasjanvierpro-oss/lutins.git\ncd lutins\n./build.sh --install";
+  const text = "curl -fsSL https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/install.sh | bash";
   try { await navigator.clipboard.writeText(text); button.textContent = "Copié !"; }
   catch { button.textContent = "Sélectionne le texte"; }
   setTimeout(() => (button.textContent = "Copier"), 1800);

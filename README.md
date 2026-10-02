@@ -29,7 +29,15 @@ Lutin, panda roux, koala, renard magique, petit dragon, fantôme, chat sorcier, 
 
 ## Installation
 
-Il faut macOS 13 ou plus récent et les outils de développement Xcode (`xcode-select --install`).
+Il faut un Mac avec macOS 13 ou plus récent. Ouvre l'app **Terminal** et colle :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/install.sh | bash
+```
+
+S'il manque les outils de développement d'Apple, une fenêtre propose de les installer : accepte, attends la fin, puis relance la même commande. Pour mettre à jour, relance-la aussi.
+
+À la main, si tu préfères :
 
 ```bash
 git clone https://github.com/lucasjanvierpro-oss/lutins.git
