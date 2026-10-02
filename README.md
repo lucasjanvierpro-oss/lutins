@@ -2,6 +2,8 @@
 
 Une petite encoche en haut de l'écran du Mac, avec **un perso par session Claude Code**, pour savoir d'un coup d'œil si Claude travaille, t'attend ou a fini.
 
+**[Voir la page de présentation →](https://lucasjanvierpro-oss.github.io/lutins/)**
+
 ![L'encoche](docs/encoche.png)
 
 Ça marche avec l'app Claude (onglet Code), Claude Code en terminal et dans VS Code.
@@ -21,7 +23,7 @@ Au survol, l'encoche s'agrandit et liste les sessions avec le titre de la discus
 
 ## Les persos au choix
 
-Lutin, panda roux, renard magique, petit dragon, fantôme, chat sorcier, axolotl, champignon, chouette — ou un différent par session.
+Lutin, panda roux, koala, renard magique, petit dragon, fantôme, chat sorcier, axolotl, champignon, chouette — ou un différent par session.
 
 ![Les persos](docs/persos.png)
 
@@ -30,6 +32,8 @@ Lutin, panda roux, renard magique, petit dragon, fantôme, chat sorcier, axolotl
 Il faut macOS 13 ou plus récent et les outils de développement Xcode (`xcode-select --install`).
 
 ```bash
+git clone https://github.com/lucasjanvierpro-oss/lutins.git
+cd lutins
 ./build.sh --install
 ```
 
@@ -60,7 +64,7 @@ Pour rester affichée pendant le glissement d'un bureau à l'autre, l'encoche ut
 | `Spaces.swift` | l'encoche visible sur tous les bureaux |
 | `main.swift` | l'app, les réglages, les aperçus |
 
-`Lutins --preview-skins fichier.png` et `Lutins --preview-island dossier` génèrent les images de ce README.
+`Lutins --preview-skins fichier.png` et `Lutins --preview-island dossier` génèrent les images de ce README. La page de présentation (`docs/index.html`, publiée avec GitHub Pages) redessine les persos en direct à partir des mêmes dessins.
 
 ## Désinstaller
 

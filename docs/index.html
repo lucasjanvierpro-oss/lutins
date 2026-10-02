@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lutins — un perso par session Claude Code</title>
+<meta name="description" content="Une petite encoche en haut de ton Mac, avec un perso en pixel art pour chaque session Claude Code : il saute quand il bosse, s'agite quand il t'attend et fait la fête quand c'est fini.">
+<meta property="og:title" content="Lutins — un perso par session Claude Code">
+<meta property="og:description" content="Sache d'un coup d'œil quand Claude a fini.">
+<meta property="og:image" content="https://lucasjanvierpro-oss.github.io/lutins/persos.png">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 9' shape-rendering='crispEdges'%3E%3Cpath fill='%234C8DF6' d='M2 0h4v1h1v1h1v4H7v1H1V6H0V2h1V1h1z'/%3E%3Cpath fill='%23171720' d='M2 3h1v2H2zM5 3h1v2H5z'/%3E%3Cpath fill='%232B5BB0' d='M2 8h1v1H2zM5 8h1v1H5z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #090b10;
+    --bg-2: #10131b;
+    --card: #141823;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #eef1f7;
+    --muted: #9aa3b5;
+    --blue: #4c8df6;
+    --orange: #ff7a1a;
+    --green: #2ecc71;
+    --glow: #6bf299;
+    --grey: #9aa0a6;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 Inter, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+  }
+  a { color: inherit; }
+  canvas { image-rendering: pixelated; display: block; }
+  .wrap { width: min(1080px, 100% - 32px); margin: 0 auto; }
+  .pixel { font-family: Silkscreen, monospace; letter-spacing: 0.02em; }
+
+  /* Navigation */
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: rgba(9, 11, 16, 0.72);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 20px; }
+  .nav-links { display: flex; gap: 22px; margin-left: auto; font-size: 14px; color: var(--muted); }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--text); }
+  .gh {
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+    border: 1px solid var(--line); border-radius: 999px; font-size: 14px; font-weight: 600; text-decoration: none;
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .gh:hover { background: rgba(255, 255, 255, 0.09); }
+  @media (max-width: 720px) { .nav-links { display: none; } .gh { margin-left: auto; } }
+
+  /* Hero */
+  .hero { position: relative; padding: 72px 0 40px; text-align: center; }
+  .hero::before {
+    content: ""; position: absolute; inset: -120px 0 auto; height: 620px; z-index: -1;
+    background:
+      radial-gradient(600px 300px at 50% 0%, rgba(76, 141, 246, 0.22), transparent 70%),
+      radial-gradient(500px 260px at 80% 30%, rgba(46, 204, 113, 0.12), transparent 70%),
+      radial-gradient(500px 260px at 15% 40%, rgba(255, 122, 26, 0.10), transparent 70%);
+  }
+  .eyebrow {
+    display: inline-block; margin: 0 0 22px; padding: 6px 14px;
+    border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, 0.04);
+    color: var(--muted); font-size: 13px; font-weight: 500;
+  }
+  .eyebrow b { color: var(--text); font-weight: 600; }
+  h1 {
+    margin: 0 auto; max-width: 820px;
+    font-size: clamp(36px, 6.2vw, 68px); line-height: 1.04; letter-spacing: -0.035em; font-weight: 800;
+  }
+  .done-word { color: var(--glow); text-shadow: 0 0 28px rgba(107, 242, 153, 0.45); }
+  .lead { margin: 22px auto 0; max-width: 640px; color: var(--muted); font-size: clamp(16px, 2vw, 19px); }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px;
+    font-weight: 600; text-decoration: none; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.05);
+    transition: transform 0.15s, background 0.15s;
+  }
+  .btn:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.1); }
+  .btn.primary { background: var(--green); color: #05140b; border-color: transparent; box-shadow: 0 8px 30px rgba(46, 204, 113, 0.35); }
+  .btn.primary:hover { background: #3ee084; }
+
+  /* Faux écran de Mac */
+  .mac {
+    position: relative; margin: 56px auto 0; width: min(980px, 100%); aspect-ratio: 16 / 8.2; min-height: 300px;
+    border-radius: 16px; overflow: hidden; text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6), 0 0 0 8px rgba(255, 255, 255, 0.025);
+    background:
+      radial-gradient(70% 90% at 10% 110%, rgba(249, 115, 22, 0.55), transparent 60%),
+      radial-gradient(60% 80% at 95% -10%, rgba(99, 102, 241, 0.75), transparent 60%),
+      radial-gradient(50% 60% at 60% 70%, rgba(236, 72, 153, 0.25), transparent 70%),
+      linear-gradient(160deg, #1e1b4b, #0f172a 55%, #111827);
+  }
+  .menubar {
+    position: absolute; inset: 0 0 auto; height: 26px; display: flex; align-items: center; gap: 16px; padding: 0 14px;
+    background: rgba(20, 20, 30, 0.35); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font-size: 12.5px; color: rgba(255, 255, 255, 0.92);
+  }
+  .menubar b { font-weight: 700; }
+  .menubar .right { margin-left: auto; display: flex; gap: 14px; opacity: 0.9; }
+  @media (max-width: 640px) { .menubar .hide-sm, .menubar .right { display: none; } }
+  #hero-island { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3; }
+  .window {
+    position: absolute; left: 7%; right: 7%; top: 22%; bottom: -6%;
+    border-radius: 12px; background: rgba(22, 24, 32, 0.92); border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45); display: grid; grid-template-columns: 26% 1fr; overflow: hidden;
+  }
+  .window .side { border-right: 1px solid rgba(255, 255, 255, 0.06); padding: 34px 14px 14px; display: grid; gap: 10px; align-content: start; }
+  .window .dots { position: absolute; top: 12px; left: 14px; display: flex; gap: 7px; }
+  .window .dots i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+  .window .dots i:nth-child(2) { background: #febc2e; }
+  .window .dots i:nth-child(3) { background: #28c840; }
+  .bar { height: 9px; border-radius: 5px; background: rgba(255, 255, 255, 0.08); }
+  .bar.on { background: rgba(255, 255, 255, 0.16); }
+  .window .main { padding: 40px 8% 0; display: grid; gap: 14px; align-content: start; }
+  .bubble { justify-self: end; width: 46%; padding: 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.07); display: grid; gap: 7px; }
+  .answer { display: grid; gap: 8px; width: 82%; }
+  .toast {
+    position: absolute; top: 36px; right: 14px; z-index: 4; width: min(320px, 70%);
+    display: grid; grid-template-columns: 38px 1fr; gap: 10px; align-items: center; padding: 11px 13px;
+    border-radius: 16px; background: rgba(38, 38, 44, 0.82); border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    transform: translateX(120%); opacity: 0; transition: transform 0.45s cubic-bezier(.2, .9, .3, 1.1), opacity 0.3s;
+  }
+  .toast.show { transform: none; opacity: 1; }
+  .toast .icon { width: 38px; height: 38px; border-radius: 9px; background: #000; display: grid; place-items: center; }
+  .toast small { display: block; color: rgba(255, 255, 255, 0.55); font-size: 11px; line-height: 1.3; }
+  .toast strong { display: block; font-size: 13px; line-height: 1.3; }
+  .toast span { display: block; font-size: 12.5px; color: rgba(255, 255, 255, 0.85); line-height: 1.35; }
+  .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; margin-top: 22px; color: var(--muted); font-size: 14px; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* Sections */
+  section { padding: 84px 0; scroll-margin-top: 50px; }
+  .kicker { margin: 0 0 10px; color: var(--glow); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+  h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 800; }
+  .sub { margin: 14px 0 0; max-width: 620px; color: var(--muted); font-size: 17px; }
+  .center { text-align: center; }
+  .center .sub { margin-left: auto; margin-right: auto; }
+
+  .states { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 44px; }
+  @media (max-width: 920px) { .states { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .states { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+  .state .stage {
+    height: 132px; border-radius: 14px; background: #000; display: grid; place-items: center; margin-bottom: 18px;
+    position: relative; overflow: hidden;
+  }
+  .state .stage.glow { box-shadow: inset 0 0 0 2px rgba(107, 242, 153, var(--pulse, 0.6)), inset 0 0 22px rgba(107, 242, 153, calc(var(--pulse, 0.6) * 0.35)); }
+  .state h3 { margin: 0 0 6px; font-size: 18px; display: flex; align-items: center; gap: 9px; }
+  .state h3 i { width: 10px; height: 10px; border-radius: 3px; }
+  .state p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  .showcase { display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
+  @media (max-width: 860px) { .showcase { grid-template-columns: 1fr; } }
+  .showcase img { width: 100%; height: auto; display: block; filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5)); }
+  .checks { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 12px; }
+  .checks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--muted); }
+  .checks li::before { content: "✓"; color: var(--glow); font-weight: 800; }
+  .checks b { color: var(--text); font-weight: 600; }
+
+  .skins { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 44px; }
+  @media (max-width: 640px) { .skins { grid-template-columns: repeat(2, 1fr); } }
+  .skin {
+    appearance: none; cursor: pointer; font: inherit; color: inherit; text-align: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 10px 14px;
+    display: grid; justify-items: center; gap: 10px; transition: border-color 0.15s, transform 0.15s, background 0.15s;
+  }
+  .skin:hover { transform: translateY(-2px); background: #181d2a; }
+  .skin[aria-pressed="true"] { border-color: var(--glow); box-shadow: 0 0 0 1px var(--glow), 0 10px 40px rgba(107, 242, 153, 0.15); }
+  .skin .tile { width: 100%; height: 96px; border-radius: 12px; background: #000; display: grid; place-items: center; }
+  .skin span { font-size: 14px; font-weight: 600; }
+  .note { margin-top: 18px; color: var(--muted); font-size: 14px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 44px; }
+  @media (max-width: 860px) { .features { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .features { grid-template-columns: 1fr; } }
+  .feature svg { width: 26px; height: 26px; color: var(--glow); }
+  .feature h3 { margin: 14px 0 6px; font-size: 17px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 44px; counter-reset: step; }
+  @media (max-width: 920px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+  .step { counter-increment: step; }
+  .step::before {
+    content: counter(step); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
+    background: rgba(107, 242, 153, 0.12); color: var(--glow); font-family: Silkscreen, monospace; font-size: 16px; margin-bottom: 14px;
+  }
+  .step h3 { margin: 0 0 8px; font-size: 17px; }
+  .step p, .step li { color: var(--muted); font-size: 14.5px; }
+  .step p { margin: 0 0 10px; }
+  .step ul { margin: 0; padding-left: 18px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; background: rgba(255, 255, 255, 0.07); padding: 2px 6px; border-radius: 6px; color: var(--text); }
+  .code {
+    position: relative; margin-top: 10px; background: #07090d; border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; font: 13.5px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; color: #d6dcea; overflow-x: auto; white-space: pre;
+  }
+  .code .p { color: var(--glow); user-select: none; }
+  .copy {
+    position: absolute; top: 8px; right: 8px; font: 600 12px Inter, sans-serif; color: var(--muted); cursor: pointer;
+    background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px;
+  }
+  .copy:hover { color: var(--text); }
+
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 12px; align-items: center; margin-top: 44px; }
+  .flow .card { text-align: center; padding: 18px 14px; }
+  .flow .card b { display: block; font-size: 15px; }
+  .flow .card small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+  .flow .arrow { color: var(--glow); font-size: 22px; }
+  @media (max-width: 860px) { .flow { grid-template-columns: 1fr; } .flow .arrow { transform: rotate(90deg); justify-self: center; } }
+
+  footer { padding: 40px 0 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand pixel" href="#"><canvas id="logo" width="28" height="26" aria-hidden="true"></canvas>Lutins</a>
+    <div class="nav-links">
+      <a href="#etats">Les états</a>
+      <a href="#persos">Les persos</a>
+      <a href="#fonctions">Fonctions</a>
+      <a href="#installer">Installer</a>
+    </div>
+    <a class="gh" href="https://github.com/lucasjanvierpro-oss/lutins">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Pour <b>Claude Code</b> sur macOS · gratuit et open source</p>
+    <h1>Sache d'un coup d'œil quand Claude <span class="done-word">a fini</span>.</h1>
+    <p class="lead">Lutins pose une petite encoche en haut de ton écran, avec un perso en pixel art pour chaque session Claude Code. Il saute quand il bosse, s'agite quand il t'attend et fait la fête quand c'est fini.</p>
+    <div class="cta">
+      <a class="btn primary" href="#installer">Installer Lutins</a>
+      <a class="btn" href="https://github.com/lucasjanvierpro-oss/lutins">Voir le code sur GitHub</a>
+    </div>
+
+    <div class="mac" id="mac">
+      <div class="menubar">
+        <b>Claude</b><span class="hide-sm">Fichier</span><span class="hide-sm">Édition</span><span class="hide-sm">Affichage</span><span class="hide-sm">Fenêtre</span>
+        <div class="right"><span class="hide-sm">Wi-Fi</span><span>Jeu. 2 oct. 10:42</span></div>
+      </div>
+      <canvas id="hero-island" aria-label="L'encoche Lutins avec quatre sessions Claude Code"></canvas>
+      <div class="toast" id="toast" role="status">
+        <div class="icon"><canvas id="toast-icon" width="28" height="26" aria-hidden="true"></canvas></div>
+        <div><small>LUTINS · maintenant</small><strong id="toast-title">Migration Postgres</strong><span id="toast-body">C'est fini ! Claude a bossé 11 s.</span></div>
+      </div>
+      <div class="window" aria-hidden="true">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="side"><div class="bar on" style="width:80%"></div><div class="bar" style="width:65%"></div><div class="bar" style="width:72%"></div><div class="bar" style="width:55%"></div></div>
+        <div class="main">
+          <div class="bubble"><div class="bar on"></div><div class="bar on" style="width:60%"></div></div>
+          <div class="answer"><div class="bar"></div><div class="bar" style="width:92%"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:84%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>il travaille</span>
+      <span><i style="background:var(--orange)"></i>il t'attend</span>
+      <span><i style="background:var(--green)"></i>il a fini</span>
+      <span><i style="background:var(--grey)"></i>il dort</span>
+    </div>
+  </div>
+</header>
+
+<section id="etats">
+  <div class="wrap">
+    <p class="kicker pixel">Les états</p>
+    <h2>Quatre états, zéro effort.</h2>
+    <p class="sub">Plus besoin de revenir vérifier la fenêtre toutes les deux minutes : il suffit de jeter un œil en haut de l'écran.</p>
+    <div class="states">
+      <div class="card state"><div class="stage"><canvas data-state="working"></canvas></div>
+        <h3><i style="background:var(--blue)"></i>Il travaille</h3>
+        <p>Il saute et brille en bleu. Au survol, tu vois ce qu'il fait : il lance une commande, écrit du code, lit des fichiers…</p></div>
+      <div class="card state"><div class="stage"><canvas data-state="waiting"></canvas></div>
+        <h3><i style="background:var(--orange)"></i>Il t'attend</h3>
+        <p>Il s'agite et un « ! » orange clignote : Claude veut ta permission, a une question ou attend que tu valides son plan.</p></div>
+      <div class="card state"><div class="stage glow" id="done-stage"><canvas data-state="done"></canvas></div>
+        <h3><i style="background:var(--green)"></i>Il a fini</h3>
+        <p>Confettis, gros saut, halo vert — et tout le contour de l'encoche pulse en vert jusqu'à ce que tu le regardes. Une notification part aussi.</p></div>
+      <div class="card state"><div class="stage"><canvas data-state="idle"></canvas></div>
+        <h3><i style="background:var(--grey)"></i>Il dort</h3>
+        <p>Plus rien depuis un moment : il ferme les yeux, fait « z », puis s'en va tout seul.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap showcase">
+    <div>
+      <p class="kicker pixel">Au survol</p>
+      <h2>Toutes tes sessions, sans changer de fenêtre.</h2>
+      <p class="sub">Passe la souris sur l'encoche : elle s'agrandit et liste chaque session avec le titre de la discussion, ce que Claude fait et depuis combien de temps.</p>
+      <ul class="checks">
+        <li><span><b>Un clic sur un perso</b> ouvre la bonne app : Claude, ton terminal ou VS Code.</span></li>
+        <li><span><b>Glisse-la</b> par la poignée pour dégager une page, ou pose-la librement sur l'écran.</span></li>
+        <li><span><b>Clic droit</b> pour les réglages : taille, perso, écran, son, notification.</span></li>
+      </ul>
+    </div>
+    <img src="encoche-depliee.png" width="720" height="514" alt="L'encoche dépliée : quatre sessions avec leur titre et leur statut">
+  </div>
+</section>
+
+<section id="persos">
+  <div class="wrap center">
+    <p class="kicker pixel">Les persos</p>
+    <h2>Choisis ton compagnon.</h2>
+    <p class="sub">Dix persos en pixel art, ou un différent pour chaque session. Clique sur l'un d'eux pour le voir en action plus haut.</p>
+    <div class="skins" id="skins"></div>
+    <p class="note">Dans l'app : clic droit sur l'encoche → Personnage.</p>
+  </div>
+</section>
+
+<section id="fonctions">
+  <div class="wrap">
+    <p class="kicker pixel">Fonctions</p>
+    <h2>Discret, mais impossible à rater.</h2>
+    <div class="features">
+      <div class="card feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4M9 4h6v2H9z"/></svg>
+        <h3>Sur tous tes écrans</h3>
+        <p>Une encoche noire en haut au centre de chaque écran, au-dessus de tout, même en plein écran. Trois tailles au choix.</p>
+      </div>
+      <div class="card feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3M22 12l-3-3M22 12l-3 3"/></svg>
+        <h3>Déplace-la où tu veux</h3>
+        <p>Près du haut elle s'y recolle, ailleurs elle devient une pastille libre. Sa place est gardée pour chaque écran.</p>
+      </div>
+      <div class="card feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <h3>Une notification à la fin</h3>
+        <p>Seulement quand Claude a fini, avec le titre de la discussion et la durée. Un clic ouvre la bonne app.</p>
+      </div>
+      <div class="card feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
+        <h3>Visible entre les bureaux</h3>
+        <p>Elle reste en place quand tu glisses d'un bureau à l'autre, et se cache à l'écran de verrouillage.</p>
+      </div>
+      <div class="card feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <h3>100 % local</h3>
+        <p>Claude Code parle à l'app sur <code>127.0.0.1</code>. Rien ne sort de ton Mac, aucun compte, aucune clé.</p>
+      </div>
+      <div class="card feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <h3>Toujours là</h3>
+        <p>Elle se lance au démarrage du Mac et suit toutes tes sessions : l'app Claude, le terminal et VS Code.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="installer">
+  <div class="wrap">
+    <p class="kicker pixel">Installer</p>
+    <h2>Trois minutes, une commande.</h2>
+    <div class="steps">
+      <div class="card step">
+        <h3>Ce qu'il te faut</h3>
+        <ul>
+          <li>macOS 13 ou plus récent</li>
+          <li>Claude Code (app Claude, terminal ou VS Code)</li>
+          <li>Les outils de développement d'Apple :</li>
+        </ul>
+        <div class="code"><span class="p">$ </span>xcode-select --install</div>
+      </div>
+      <div class="card step">
+        <h3>Installe Lutins</h3>
+        <p>L'app est compilée sur ton Mac puis copiée dans <code>~/Applications</code>.</p>
+        <div class="code" id="install-code"><button class="copy" type="button" data-copy="install">Copier</button><span class="p">$ </span>git clone https://github.com/lucasjanvierpro-oss/lutins.git
+<span class="p">$ </span>cd lutins
+<span class="p">$ </span>./build.sh --install</div>
+      </div>
+      <div class="card step">
+        <h3>C'est tout</h3>
+        <p>L'encoche apparaît, l'app se branche toute seule à Claude Code (avec une sauvegarde de tes réglages) et se lance à chaque démarrage.</p>
+        <p>Clique sur <b>Autoriser</b> quand macOS te demande pour les notifications.</p>
+        <p>Pour désinstaller : clic droit sur l'encoche → <i>Débrancher de Claude Code et quitter</i>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="fonctionnement">
+  <div class="wrap center">
+    <p class="kicker pixel">Sous le capot</p>
+    <h2>Simple comme un hook.</h2>
+    <p class="sub">Claude Code prévient Lutins à chaque étape : message envoyé, outil lancé, permission demandée, travail terminé.</p>
+    <div class="flow">
+      <div class="card"><b>Claude Code</b><small>app Claude, terminal ou VS Code</small></div>
+      <div class="arrow">→</div>
+      <div class="card"><b>Hooks</b><small>un petit <code>curl</code> par événement</small></div>
+      <div class="arrow">→</div>
+      <div class="card"><b>Lutins</b><small>serveur local sur 127.0.0.1:3850</small></div>
+      <div class="arrow">→</div>
+      <div class="card"><b>L'encoche</b><small>un perso par session</small></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="pixel">Lutins</span>
+    <span>Fait avec Claude Code · <a href="https://github.com/lucasjanvierpro-oss/lutins">Le code sur GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+// Les persos, extraits du code de l'app (Creatures.swift).
+const CREATURES = [{"id": "panda-roux", "name": "Panda roux", "palette": {"O": "#D9622B", "o": "#9E3F17", "W": "#F6EDE1", "D": "#3A1D10", "E": "#140904", "R": "#F0A060"}, "art": [".OO....OO...", "ODOOOOOODO..", "OOWOOOOWOO..", "OOEOOOOEOO..", "OOoWEEWoOO..", ".OOOWWOOO..R", "..DOOOOD..oR", "..DDDDDD.oR.", "..DDDDDDRo..", "..DD..DD...."], "walk": ".DD....DD...", "eyes": [[2, 3], [7, 3]], "lid": "O", "floats": false}, {"id": "koala", "name": "Koala", "palette": {"G": "#9AA3AD", "g": "#6F7882", "W": "#EEF0F2", "N": "#2B2D33", "E": "#15161A", "L": "#6BCB77"}, "art": [".gg....gg...", "gWWg..gWWg..", "gWGGGGGGWg..", ".GEGGGGEG...", ".GGGNNGGG...", ".GGNNNNGG...", "..GGNNGG.L..", "..GWWWWGL...", "..GWWWWG....", "..gg..gg...."], "walk": ".gg....gg...", "eyes": [[2, 3], [7, 3]], "lid": "G", "floats": false}, {"id": "kitsune", "name": "Renard magique", "palette": {"F": "#F28A30", "W": "#FFF3E2", "E": "#1C0F07", "B": "#4A2A18", "G": "#7FDBFF"}, "art": [".F....F.....", "FFF..FFF....", "FFFFFFFF....", "FEFFFFEF...G", "WWFFFFWW..GG", ".WWEEWW...WG", "..FFFF...FF.", ".FWWWWF.FF..", ".FWWWWFFF...", ".BB..BB....."], "walk": "BB....BB....", "eyes": [[1, 3], [6, 3]], "lid": "F", "floats": false}, {"id": "dragon", "name": "Petit dragon", "palette": {"G": "#45C486", "g": "#2B8C5C", "Y": "#F7DC79", "H": "#F4E6C0", "E": "#0F1A14"}, "art": ["..H....H....", "..HGGGGH....", "..GGGGGG....", "..GEGGEG....", "g.GGggGG.g..", "gg.GYYG.gg..", "gggGYYGggg..", ".ggGYYGgg.Gg", "...GGGGGGG..", "...GG..GG..."], "walk": "..GG....GG..", "eyes": [[3, 3], [6, 3]], "lid": "G", "floats": false}, {"id": "fantome", "name": "Fantôme", "palette": {"W": "#EEF1FF", "E": "#1E2340", "P": "#FF9EC7"}, "art": ["....WWWW....", "...WWWWWW...", "..WWWWWWWW..", "..WEWWWWEW..", "..WEWWWWEW..", ".WWPWWWWPWW.", "..WWWWWWWW..", "..WWWWWWWW..", "..WWWWWWWW..", "..WW.WW.WW.."], "walk": "..W.WW.WW.W.", "eyes": [[3, 3], [3, 4], [8, 3], [8, 4]], "lid": "W", "floats": true}, {"id": "chat-sorcier", "name": "Chat sorcier", "palette": {"H": "#8B5CF6", "S": "#FFE066", "C": "#6B6F9E", "E": "#FFE066", "N": "#F49AC1", "K": "#2A2540"}, "art": [".....HH.....", "....HHHS....", "...HHHHH....", "HHHHHHHHHH..", ".CCCCCCCC...", ".CECCCCEC...", ".CCCNNCCC.C.", "..CCCCCC..C.", "..CCCCCCCC..", "..CC..CC...."], "walk": ".CC....CC...", "eyes": [[2, 5], [7, 5]], "lid": "C", "floats": false}, {"id": "axolotl", "name": "Axolotl", "palette": {"P": "#FFA3CF", "p": "#F25C9A", "E": "#2A0F1E", "M": "#C23A78"}, "art": ["p.p......p.p", ".pPPPPPPPPp.", "pPPPPPPPPPPp", ".PEPPPPPPEP.", "pPPPPPPPPPPp", ".PPPMPPMPPP.", "..PPPMMPPP..", "...PPPPPP...", "...PPPPPP...", "...PP..PP..."], "walk": "..PP....PP..", "eyes": [[2, 3], [9, 3]], "lid": "P", "floats": false}, {"id": "champignon", "name": "Champignon", "palette": {"R": "#E5484D", "W": "#FFF5F5", "S": "#F5E6C8", "E": "#2A1A10", "P": "#FFB0A8"}, "art": ["....RRRR....", "..RRWRRRRR..", ".RRWWRRRWRR.", "RRRRRRRWWRRR", "RRWRRRRRRRRR", ".RRRRRRRRRR.", "...SSSSSS...", "...SESSES...", "...PSSSSP...", "...SS..SS..."], "walk": "..SS....SS..", "eyes": [[4, 7], [7, 7]], "lid": "S", "floats": false}, {"id": "chouette", "name": "Chouette", "palette": {"B": "#A0703F", "b": "#6B4423", "Y": "#F7D046", "E": "#1A120A", "O": "#F59A2F", "C": "#EBD5AA", "c": "#C9A877"}, "art": ["..b......b..", "..BBBBBBBB..", ".BYYBBBBYYB.", ".BYEBBBBEYB.", ".BBBBOOBBBB.", "bBCCCCCCCCBb", "bBCcCCCCcCBb", ".BCCCCCCCCB.", "..BBBBBBBB..", "...OO..OO..."], "walk": "..OO....OO..", "eyes": [[2, 2], [3, 2], [2, 3], [3, 3], [8, 2], [9, 2], [8, 3], [9, 3]], "lid": "B", "floats": false}];
+
+const STATE_COLOR = { working: "#4C8DF6", waiting: "#FF7A1A", done: "#2ECC71", idle: "#9AA0A6" };
+const BLUE_GLOW = "#80C2FF", GREEN_GLOW = "#6BF299";
+const HOP = [0, -1, -2, -2, -1, 0], BIG_JUMP = [0, -2, -3, -3, -2, 0];
+const CONFETTI = ["#34C759", "#FFCC00", "#FF2D55", "#30B0C7", "#FFFFFF"];
+const FRAME_MS = 120;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SKINS = [{ id: "lutin", name: "Lutin" }, ...CREATURES.map(c => ({ id: c.id, name: c.name }))];
+let selected = "panda-roux";
+
+const pulse = (frame, period) => 0.5 + 0.5 * Math.sin(frame * 2 * Math.PI / period);
+
+function mix(hex, other, amount) {
+  const a = parseInt(hex.slice(1), 16), b = parseInt(other.slice(1), 16);
+  const ch = s => Math.round(((a >> s) & 255) * (1 - amount) + ((b >> s) & 255) * amount);
+  return "#" + ((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1);
+}
+
+function aura(shape, color, strength, dot) {
+  const around = (set, diagonal) => {
+    const steps = diagonal ? [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]] : [[0,-1],[-1,0],[1,0],[0,1]];
+    const out = new Set();
+    for (const key of set) {
+      const [c, r] = key.split(",").map(Number);
+      for (const [dc, dr] of steps) { const k = (c + dc) + "," + (r + dr); if (!set.has(k)) out.add(k); }
+    }
+    return out;
+  };
+  const inner = around(shape, true);
+  const outer = around(new Set([...shape, ...inner]), false);
+  for (const k of outer) { const [c, r] = k.split(",").map(Number); dot(c, r, color, 0.3 * strength); }
+  for (const k of inner) { const [c, r] = k.split(",").map(Number); dot(c, r, color, 0.9 * strength); }
+}
+
+function glow(shape, state, frame, dot) {
+  if (state === "working") aura(shape, BLUE_GLOW, 0.1 + 0.9 * pulse(frame, 8), dot);
+  if (state === "done") aura(shape, GREEN_GLOW, 0.35, dot);
+}
+
+function confetti(age, oc, or, dot) {
+  const k = age / 0.12;
+  if (k >= 16) return;
+  for (let i = 0; i < 18; i++) {
+    const a = i / 18 * 2 * Math.PI, speed = 0.4 + ((i * 37) % 10) / 20;
+    const x = oc + Math.cos(a) * speed * k;
+    const y = or - (Math.abs(Math.sin(a)) * speed + 0.3) * k + 0.06 * k * k;
+    dot(Math.round(x), Math.round(y), CONFETTI[i % CONFETTI.length]);
+  }
+}
+
+function drawCreature(ctx, cr, state, age, frame, x, y, p, o) {
+  const dot = (c, r, color, a = 1) => { ctx.globalAlpha = a * o.alpha; ctx.fillStyle = color; ctx.fillRect(x + c * p, y + r * p, p, p); };
+  let dx = 0, dy = 0, stepping = false;
+  if (state === "working") { dy = HOP[frame % 6]; stepping = dy === 0 && Math.floor(frame / 6) % 2 === 1; }
+  else if (state === "waiting") dx = [0, 1, 0, -1][frame % 4];
+  else if (state === "done") { if (age < 3) dy = BIG_JUMP[frame % 6]; }
+  else if (cr.floats) dy = Math.floor(frame / 8) % 2 === 0 ? 0 : -1;
+
+  const ox = dx, oy = 2 + dy;
+  const rows = cr.art.map((line, r) => stepping && r === cr.art.length - 1 ? cr.walk : line);
+  const shape = new Set();
+  rows.forEach((line, r) => [...line].forEach((ch, c) => { if (ch !== ".") shape.add((ox + c) + "," + (oy + r)); }));
+  if (o.effects) glow(shape, state, frame, dot);
+  if (state !== "idle") for (let c = 1; c <= 10; c++) dot(c, 12, STATE_COLOR[state], c === 1 || c === 10 ? 0.45 : 0.95);
+  rows.forEach((line, r) => [...line].forEach((ch, c) => { if (ch !== ".") dot(ox + c, oy + r, cr.palette[ch]); }));
+
+  const blink = state !== "idle" && frame % 37 === 36;
+  if (state === "idle" || blink) {
+    const lid = cr.palette[cr.lid], ink = cr.palette.K || cr.palette.E;
+    for (const side of [cr.eyes.filter(e => e[0] < 5.5), cr.eyes.filter(e => e[0] >= 5.5)]) {
+      if (!side.length) continue;
+      side.forEach(([c, r]) => dot(ox + c, oy + r, lid));
+      const bottom = Math.max(...side.map(e => e[1])), cols = side.map(e => e[0]);
+      const outward = cols[0] < 5.5 ? Math.min(...cols) - 1 : Math.max(...cols) + 1;
+      [...new Set([...cols, outward])].forEach(c => dot(ox + c, oy + bottom, ink));
+    }
+  }
+  const color = STATE_COLOR[state];
+  if (state === "waiting" && Math.floor(frame / 3) % 2 === 0) [1, 2, 3, 5].forEach(r => dot(12, r, color));
+  if (state === "done" && (Math.floor(frame / 4) % 2 === 0 || age >= 3)) [[12,0],[11,1],[12,1],[13,1],[12,2]].forEach(([c, r]) => dot(c, r, color));
+  if (state === "idle" && o.sleepyZ && Math.floor(frame / 8) % 2 === 0) [[11,0],[12,0],[13,0],[12,1],[11,2],[11,3],[12,3],[13,3]].forEach(([c, r]) => dot(c, r, "#9AA0A6"));
+  if (o.effects && state === "done") confetti(age, 6, 2, dot);
+  ctx.globalAlpha = 1;
+}
+
+const LUTIN_BODY = ["..####..", ".######.", "########", "########", "########", "########", ".######."];
+
+function drawLutin(ctx, state, age, frame, x, y, p, o) {
+  x += 2 * p; y += p;
+  const base = STATE_COLOR[state], dark = mix(base, "#000000", 0.35), light = mix(base, "#FFFFFF", 0.55), ink = "#17171F";
+  const dot = (c, r, color, a = 1) => { ctx.globalAlpha = a * o.alpha; ctx.fillStyle = color; ctx.fillRect(x + c * p, y + r * p, p, p); };
+  let dx = 0, dy = 0, tip = 4, legs = "..#..#..", eyes = [[2,3],[2,4],[5,3],[5,4]], mouth = [], bang = false, zzz = false;
+  if (state === "working") {
+    dy = HOP[frame % 6];
+    if (dy === 0 && Math.floor(frame / 6) % 2 === 1) legs = ".#....#.";
+    const glance = [0, -1, 0, 1][Math.floor(frame / 10) % 4];
+    eyes = eyes.map(([c, r]) => [c + glance, r]);
+    tip = frame % 2 === 0 ? 3 : 5;
+  } else if (state === "waiting") {
+    eyes = [[2,2],[2,3],[5,2],[5,3]]; mouth = [[3,5],[4,5]];
+    bang = Math.floor(frame / 3) % 2 === 0; dx = [0, 1, 0, -1][frame % 4];
+  } else if (state === "done") {
+    eyes = [[2,3],[5,3]]; mouth = [[2,4],[3,5],[4,5],[5,4]];
+    if (age < 3) dy = BIG_JUMP[frame % 6];
+  } else {
+    eyes = [[1,4],[2,4],[5,4],[6,4]]; zzz = o.sleepyZ && Math.floor(frame / 8) % 2 === 0;
+  }
+  const bx = 1 + dx, by = 4 + dy, pixels = [];
+  LUTIN_BODY.forEach((line, r) => [...line].forEach((ch, c) => { if (ch === "#") pixels.push([bx + c, by + r, base]); }));
+  [...eyes, ...mouth].forEach(([c, r]) => pixels.push([bx + c, by + r, ink]));
+  pixels.push([bx + 4, by - 1, base], [bx + tip, by - 2, light]);
+  [...legs].forEach((ch, c) => { if (ch === "#") pixels.push([bx + c, by + 7, dark]); });
+  if (o.effects) glow(new Set(pixels.map(([c, r]) => c + "," + r)), state, frame, dot);
+  pixels.forEach(([c, r, color]) => dot(c, r, color));
+  if (bang) [0, 1, 2, 4].forEach(r => dot(9, r, base));
+  if (zzz) [[7,0],[8,0],[9,0],[8,1],[7,2],[7,3],[8,3],[9,3]].forEach(([c, r]) => dot(c, r, base));
+  if (o.effects && state === "done") confetti(age, 5, 3, dot);
+  ctx.globalAlpha = 1;
+}
+
+function drawSkin(ctx, id, state, age, frame, x, y, p, opts = {}) {
+  const o = { alpha: 1, effects: true, sleepyZ: true, ...opts };
+  const cr = CREATURES.find(c => c.id === id);
+  cr ? drawCreature(ctx, cr, state, age, frame, x, y, p, o) : drawLutin(ctx, state, age, frame, x, y, p, o);
+}
+
+function setup(canvas, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.width = w + "px"; canvas.style.height = h + "px";
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  return ctx;
+}
+
+// L'encoche : même géométrie que dans l'app (oreilles concaves en haut, coins arrondis en bas).
+function islandPath(w, h, e, r, close) {
+  const path = new Path2D();
+  path.moveTo(0, 0);
+  path.bezierCurveTo(e * 0.6, 0, e, e * 0.4, e, e);
+  path.lineTo(e, h - r);
+  path.bezierCurveTo(e, h - r * 0.45, e + r * 0.45, h, e + r, h);
+  path.lineTo(w - e - r, h);
+  path.bezierCurveTo(w - e - r * 0.45, h, w - e, h - r * 0.45, w - e, h - r);
+  path.lineTo(w - e, e);
+  path.bezierCurveTo(w - e, e * 0.4, w - e * 0.6, 0, w, 0);
+  if (close) path.closePath();
+  return path;
+}
+
+// Une petite histoire de 16 secondes jouée en boucle dans le faux écran.
+const STORY = 16;
+function story(t) {
+  const main = t < 5 ? "working" : t < 7.5 ? "waiting" : t < 11 ? "working" : "done";
+  const koala = t < 8 ? "working" : t < 12.5 ? "done" : "idle";
+  return [
+    { skin: selected, state: main, age: t - 11, title: "Migration Postgres", worked: "11 s" },
+    { skin: selected === "kitsune" ? "dragon" : "kitsune", state: "working", age: 99 },
+    { skin: selected === "koala" ? "axolotl" : "koala", state: koala, age: t - 8, title: "Page d'accueil", worked: "8 s" },
+    { skin: selected === "chouette" ? "fantome" : "chouette", state: "idle", age: 99 },
+  ];
+}
+
+const hero = document.getElementById("hero-island");
+const mac = document.getElementById("mac");
+const toast = document.getElementById("toast");
+let heroCtx, heroP, toastFor = null;
+
+function sizeHero() {
+  heroP = Math.max(2, Math.min(5, Math.floor(mac.clientWidth / 190)));
+  const p = heroP, n = 4, slot = 14 * p, ear = Math.round(10 * p / 3);
+  const w = n * slot + (n - 1) * p + 8 * p + 2 * ear, h = Math.round(p + 13 * p + 1.5 * p);
+  heroCtx = setup(hero, w, h);
+}
+
+function drawHero(frame, t) {
+  const p = heroP, w = parseFloat(hero.style.width), h = parseFloat(hero.style.height), ear = Math.round(10 * p / 3);
+  const sessions = story(t), ctx = heroCtx;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#000"; ctx.fill(islandPath(w, h, ear, 14, true));
+  if (sessions.some(s => s.state === "done")) {
+    const strength = 0.45 + 0.55 * pulse(frame, 9);
+    ctx.save(); ctx.clip(islandPath(w, h, ear, 14, true));
+    const edge = islandPath(w, h, ear, 14, false);
+    ctx.strokeStyle = GREEN_GLOW;
+    ctx.globalAlpha = 0.25 * strength; ctx.lineWidth = 14 * p / 3; ctx.stroke(edge);
+    ctx.globalAlpha = strength; ctx.lineWidth = 5 * p / 3; ctx.stroke(edge);
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+  const slot = 14 * p, rowW = 4 * slot + 3 * p;
+  sessions.forEach((s, i) => drawSkin(ctx, s.skin, s.state, s.age, frame, Math.round((w - rowW) / 2 + i * (slot + p)), p, p));
+
+  // La notification de fin.
+  const finished = sessions.find(s => s.title && s.state === "done" && s.age < 3.5);
+  if (finished && toastFor !== finished.title) {
+    toastFor = finished.title;
+    document.getElementById("toast-title").textContent = finished.title;
+    document.getElementById("toast-body").textContent = "C'est fini ! Claude a bossé " + finished.worked + ".";
+    toast.classList.add("show");
+  } else if (!finished && toastFor) {
+    toastFor = null;
+    toast.classList.remove("show");
+  }
+}
+
+// Les quatre cartes d'état, le choix des persos et les petites icônes.
+const stateCanvases = [...document.querySelectorAll("canvas[data-state]")].map(cv => ({ cv, state: cv.dataset.state, ctx: setup(cv, 84, 78) }));
+const doneStage = document.getElementById("done-stage");
+const skinsBox = document.getElementById("skins");
+const skinTiles = SKINS.map(skin => {
+  const button = document.createElement("button");
+  button.className = "skin"; button.type = "button";
+  button.setAttribute("aria-pressed", String(skin.id === selected));
+  const tile = document.createElement("div"); tile.className = "tile";
+  const cv = document.createElement("canvas"); tile.appendChild(cv);
+  const label = document.createElement("span"); label.textContent = skin.name;
+  button.append(tile, label);
+  button.addEventListener("click", () => {
+    selected = skin.id;
+    skinTiles.forEach(t => t.button.setAttribute("aria-pressed", String(t.skin.id === selected)));
+    mac.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+  });
+  skinsBox.appendChild(button);
+  return { skin, button, ctx: setup(cv, 70, 65) };
+});
+const logoCtx = setup(document.getElementById("logo"), 28, 26);
+const toastCtx = setup(document.getElementById("toast-icon"), 28, 26);
+
+function render(frame, now) {
+  const t = (now / 1000) % STORY;
+  drawHero(frame, t);
+  const cycle = (now / 1000) % 6;
+  stateCanvases.forEach(({ ctx, state }) => {
+    ctx.clearRect(0, 0, 84, 78);
+    drawSkin(ctx, selected, state, state === "done" ? cycle : 99, frame, 0, 0, 6);
+  });
+  doneStage.style.setProperty("--pulse", (0.45 + 0.55 * pulse(frame, 9)).toFixed(2));
+  skinTiles.forEach(({ skin, ctx }) => { ctx.clearRect(0, 0, 70, 65); drawSkin(ctx, skin.id, "working", 99, frame, 0, 0, 5); });
+  logoCtx.clearRect(0, 0, 28, 26); drawSkin(logoCtx, "lutin", "working", 99, frame, 0, 0, 2, { effects: false });
+  toastCtx.clearRect(0, 0, 28, 26); drawSkin(toastCtx, selected, "done", 99, 0, 0, 0, 2, { effects: false });
+}
+
+sizeHero();
+addEventListener("resize", () => { sizeHero(); if (reduceMotion) render(0, 12000); });
+if (reduceMotion) {
+  render(0, 12000);
+} else {
+  const start = performance.now();
+  let last = -1;
+  (function loop(now) {
+    const frame = Math.floor((now - start) / FRAME_MS);
+    if (frame !== last) { last = frame; render(frame, now - start); }
+    requestAnimationFrame(loop);
+  })(start);
+}
+
+document.querySelectorAll(".copy").forEach(button => button.addEventListener("click", async () => {
+  const text = "git clone https://github.com/lucasjanvierpro-oss/lutins.git\ncd lutins\n./build.sh --install";
+  try { await navigator.clipboard.writeText(text); button.textContent = "Copié !"; }
+  catch { button.textContent = "Sélectionne le texte"; }
+  setTimeout(() => (button.textContent = "Copier"), 1800);
+}));
+</script>
+</body>
+</html>

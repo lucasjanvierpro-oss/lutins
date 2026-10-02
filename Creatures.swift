@@ -121,6 +121,23 @@ enum Skins {
             ],
             walk: ".DD....DD...", eyes: [(2, 3), (7, 3)], lid: "O"),
         Creature(
+            id: "koala", name: "Koala",
+            palette: ["G": rgb(0x9AA3AD), "g": rgb(0x6F7882), "W": rgb(0xEEF0F2), "N": rgb(0x2B2D33),
+                      "E": rgb(0x15161A), "L": rgb(0x6BCB77)],
+            art: [
+                ".gg....gg...",
+                "gWWg..gWWg..",
+                "gWGGGGGGWg..",
+                ".GEGGGGEG...",
+                ".GGGNNGGG...",
+                ".GGNNNNGG...",
+                "..GGNNGG.L..",
+                "..GWWWWGL...",
+                "..GWWWWG....",
+                "..gg..gg....",
+            ],
+            walk: ".gg....gg...", eyes: [(2, 3), (7, 3)], lid: "G"),
+        Creature(
             id: "kitsune", name: "Renard magique",
             palette: ["F": rgb(0xF28A30), "W": rgb(0xFFF3E2), "E": rgb(0x1C0F07), "B": rgb(0x4A2A18), "G": rgb(0x7FDBFF)],
             art: [
