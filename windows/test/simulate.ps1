@@ -59,13 +59,21 @@ function FullShot($name) {
 
 $script:hookTimes = @()
 function Hook($event, $body) {
-    $file = Join-Path $Out 'hook-input.json'
-    [IO.File]::WriteAllText($file, ($body | ConvertTo-Json -Compress), $utf8)
+    # Comme Claude Code : le JSON arrive par l'entree standard (un tuyau), sans fenetre.
+    $info = New-Object System.Diagnostics.ProcessStartInfo $exe, "--hook $event"
+    $info.UseShellExecute = $false
+    $info.RedirectStandardInput = $true
+    $info.CreateNoWindow = $true
     $watch = [Diagnostics.Stopwatch]::StartNew()
-    $p = Start-Process -FilePath $exe -ArgumentList '--hook', $event -RedirectStandardInput $file -Wait -PassThru -NoNewWindow
+    $p = [Diagnostics.Process]::Start($info)
+    $bytes = $utf8.GetBytes(($body | ConvertTo-Json -Compress))
+    $p.StandardInput.BaseStream.Write($bytes, 0, $bytes.Length)
+    $p.StandardInput.Close()
+    $p.WaitForExit()
     $watch.Stop()
     $script:hookTimes += $watch.ElapsedMilliseconds
     if ($p.ExitCode -ne 0) { $failures.Add("--hook $event a renvoye $($p.ExitCode)") }
+}
 }
 
 Write-Host "== Ecran"
@@ -110,7 +118,7 @@ Hook 'UserPromptSubmit' @{ session_id = 'sess-d'; cwd = 'C:\projets\app-mobile';
 Hook 'PreToolUse' @{ session_id = 'sess-d'; cwd = 'C:\projets\app-mobile'; hook_event_name = 'PreToolUse'; tool_name = 'Edit' }
 $times = $script:hookTimes | Measure-Object -Average -Maximum
 Write-Host ("Duree d'un appel --hook : {0:N0} ms en moyenne, {1} ms au pire" -f $times.Average, $times.Maximum)
-Check ($times.Maximum -lt 3000) "chaque hook prend moins de 3 s"
+Check ($times.Maximum -lt 1500) "chaque hook prend moins de 1,5 s"
 
 $named = $false
 for ($i = 0; $i -lt 20 -and -not $named; $i++) {
