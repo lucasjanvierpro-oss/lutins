@@ -10,6 +10,32 @@ New-Item -ItemType Directory -Force -Path $Out | Out-Null
 
 $exe = Join-Path $env:LOCALAPPDATA 'Lutins\Lutins.exe'
 $settingsPath = Join-Path $env:USERPROFILE '.claude\settings.json'
+Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+public static class Desk {
+    [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr hwnd, IntPtr dc);
+    [DllImport("gdi32.dll")] static extern bool BitBlt(IntPtr dst, int x, int y, int w, int h, IntPtr src, int sx, int sy, int rop);
+    [DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, UIntPtr extra);
+    // SRCCOPY | CAPTUREBLT : inclut les fenetres "layered" comme l'encoche.
+    public static void Capture(string path, int x, int y, int w, int h) {
+        using (var bitmap = new Bitmap(w, h)) {
+            using (var g = Graphics.FromImage(bitmap)) {
+                IntPtr dst = g.GetHdc(), src = GetDC(IntPtr.Zero);
+                BitBlt(dst, 0, 0, w, h, src, x, y, 0x00CC0020 | 0x40000000);
+                ReleaseDC(IntPtr.Zero, src);
+                g.ReleaseHdc(dst);
+            }
+            bitmap.Save(path, ImageFormat.Png);
+        }
+    }
+    public static void RightClick() { mouse_event(0x0008, 0, 0, 0, UIntPtr.Zero); mouse_event(0x0010, 0, 0, 0, UIntPtr.Zero); }
+}
+'@
+
 $failures = New-Object System.Collections.Generic.List[string]
 $utf8 = New-Object System.Text.UTF8Encoding $false
 
@@ -19,15 +45,7 @@ function Check($ok, $label) {
 
 function State { Invoke-RestMethod -UseBasicParsing -TimeoutSec 3 -Uri 'http://127.0.0.1:3850/state' }
 
-function Shot($name, $x, $y, $w, $h) {
-    $bitmap = New-Object System.Drawing.Bitmap $w, $h
-    $g = [System.Drawing.Graphics]::FromImage($bitmap)
-    $copy = [System.Drawing.CopyPixelOperation]::SourceCopy -bor [System.Drawing.CopyPixelOperation]::CaptureBlt
-    $g.CopyFromScreen($x, $y, 0, 0, $bitmap.Size, $copy)
-    $g.Dispose()
-    $bitmap.Save((Join-Path $Out $name), [System.Drawing.Imaging.ImageFormat]::Png)
-    $bitmap.Dispose()
-}
+function Shot($name, $x, $y, $w, $h) { [Desk]::Capture((Join-Path $Out $name), $x, $y, $w, $h) }
 
 function TopShot($name) {
     $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
@@ -126,15 +144,7 @@ if ($island) {
     Check ($island.expanded -eq $true) "l'encoche se deplie au survol"
     TopShot 'encoche-survolee.png'
 
-    Add-Type -TypeDefinition @'
-using System;
-using System.Runtime.InteropServices;
-public static class Mouse {
-    [DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, UIntPtr extra);
-    public static void RightClick() { mouse_event(0x0008, 0, 0, 0, UIntPtr.Zero); mouse_event(0x0010, 0, 0, 0, UIntPtr.Zero); }
-}
-'@
-    [Mouse]::RightClick()
+    [Desk]::RightClick()
     Start-Sleep -Milliseconds 1200
     FullShot 'menu-reglages.png'
     [System.Windows.Forms.SendKeys]::SendWait('{ESC}')

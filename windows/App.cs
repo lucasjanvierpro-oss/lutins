@@ -261,14 +261,14 @@ namespace Lutins
                 Startup.Set(on);
             }));
             menu.Items.Add(Toggle("Notification quand c'est fini", Prefs.GetBool("notify", true), on => Prefs.SetBool("notify", on)));
-            var tidy = Action("Ranger les persos finis", store.Tidy);
+            var tidy = Command("Ranger les persos finis", store.Tidy);
             tidy.Enabled = sessions.Any(s => s.State == LutinState.Done || s.State == LutinState.Idle);
             menu.Items.Add(tidy);
-            menu.Items.Add(Action("Remettre l'encoche en haut au centre", island.ResetPlacements));
-            if (!Hooks.Installed) menu.Items.Add(Action("Brancher à Claude Code", Connect));
+            menu.Items.Add(Command("Remettre l'encoche en haut au centre", island.ResetPlacements));
+            if (!Hooks.Installed) menu.Items.Add(Command("Brancher à Claude Code", Connect));
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add(Action("Débrancher de Claude Code et quitter", UnplugAndQuit));
-            menu.Items.Add(Action("Quitter Lutins", Quit));
+            menu.Items.Add(Command("Débrancher de Claude Code et quitter", UnplugAndQuit));
+            menu.Items.Add(Command("Quitter Lutins", Quit));
         }
 
         static ToolStripMenuItem Disabled(string title)
@@ -276,7 +276,7 @@ namespace Lutins
             return new ToolStripMenuItem(title) { Enabled = false };
         }
 
-        static ToolStripMenuItem Action(string title, Action action)
+        static ToolStripMenuItem Command(string title, Action action)
         {
             var item = new ToolStripMenuItem(title);
             item.Click += delegate { action(); };
