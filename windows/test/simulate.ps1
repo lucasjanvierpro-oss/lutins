@@ -74,7 +74,6 @@ function Hook($event, $body) {
     $script:hookTimes += $watch.ElapsedMilliseconds
     if ($p.ExitCode -ne 0) { $failures.Add("--hook $event a renvoye $($p.ExitCode)") }
 }
-}
 
 Write-Host "== Ecran"
 [System.Windows.Forms.Screen]::AllScreens | ForEach-Object { Write-Host "$($_.DeviceName) $($_.Bounds) principal=$($_.Primary)" }
