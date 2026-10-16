@@ -1,0 +1,48 @@
+# Teste la version Windows sur une vraie machine Windows : installation comme un utilisateur,
+# aperçus des dessins, sessions simulées, captures d'écran et débranchement.
+name: Windows
+
+on:
+  push:
+    paths:
+      - 'windows/**'
+      - '.github/workflows/windows.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Un settings.json déjà rempli (autre outil, réglages)
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude" | Out-Null
+          $json = '{"permissions":{"allow":["Bash(git status)"]},"hooks":{"Stop":[{"matcher":"","hooks":[{"type":"command","command":"echo autre-outil"}]}]},"model":"opus"}'
+          [IO.File]::WriteAllText("$env:USERPROFILE\.claude\settings.json", $json)
+
+      - name: Installation, avec la commande donnée aux utilisateurs
+        shell: powershell
+        env:
+          LUTINS_REF: ${{ github.sha }}
+        run: irm "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/windows/install.ps1" | iex
+
+      - name: Aperçus des dessins
+        shell: powershell
+        run: |
+          $p = Start-Process -FilePath "$env:LOCALAPPDATA\Lutins\Lutins.exe" -ArgumentList '--preview', "$pwd\out\apercus" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "--preview a renvoye $($p.ExitCode)" }
+          Get-ChildItem out\apercus
+
+      - name: Sessions simulées, survol, menu, débranchement
+        shell: powershell
+        run: .\windows\test\simulate.ps1 -Out "$pwd\out"
+
+      - name: Résultats
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lutins-windows
+          path: out
