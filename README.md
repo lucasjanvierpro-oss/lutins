@@ -1,6 +1,6 @@
 # Lutins
 
-Une petite encoche en haut de l'écran du Mac, avec **un perso par session Claude Code**, pour savoir d'un coup d'œil si Claude travaille, t'attend ou a fini.
+Une petite encoche en haut de l'écran (Mac ou Windows), avec **un perso par session Claude Code**, pour savoir d'un coup d'œil si Claude travaille, t'attend ou a fini.
 
 **[Voir la page de présentation →](https://lucasjanvierpro-oss.github.io/lutins/)**
 
@@ -37,7 +37,25 @@ curl -fsSL https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/ins
 
 S'il manque les outils de développement d'Apple, une fenêtre propose de les installer : accepte, attends la fin, puis relance la même commande. Pour mettre à jour, relance-la aussi.
 
-À la main, si tu préfères :
+### Sur Windows
+
+Il faut Windows 10 ou 11. Ouvre **PowerShell** et colle :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/windows/install.ps1 | iex"
+```
+
+Rien d'exécutable n'est téléchargé : le code source est compilé sur place par le compilateur C# livré avec Windows, dans `%LOCALAPPDATA%\Lutins\Lutins.exe`. L'app se branche toute seule à Claude Code, s'ajoute au démarrage de Windows et au menu Démarrer. Pour mettre à jour, relance la même commande. Pour tout désinstaller :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/windows/uninstall.ps1 | iex"
+```
+
+Le code Windows est dans [`windows/`](windows) (C# et WinForms, mêmes persos et mêmes réglages) ; il est testé à chaque changement sur une machine Windows de GitHub Actions.
+
+### Sur Mac, à la main
+
+Si tu préfères :
 
 ```bash
 git clone https://github.com/lucasjanvierpro-oss/lutins.git

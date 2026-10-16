@@ -217,6 +217,11 @@
     background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px;
   }
   .copy:hover { color: var(--text); }
+  .windows { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 20px; align-items: center; }
+  @media (max-width: 920px) { .windows { grid-template-columns: minmax(0, 1fr); } }
+  .windows h3 { margin: 0 0 8px; font-size: 17px; }
+  .windows p { margin: 0 0 10px; color: var(--muted); font-size: 14.5px; }
+  .windows .code { white-space: pre-wrap; word-break: break-all; padding-top: 42px; }
 
   .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 12px; align-items: center; margin-top: 44px; }
   .flow .card { text-align: center; padding: 18px 14px; }
@@ -249,7 +254,7 @@
 
 <header class="hero">
   <div class="wrap">
-    <p class="eyebrow">Pour <b>Claude Code</b> sur macOS · gratuit et open source</p>
+    <p class="eyebrow">Pour <b>Claude Code</b> sur macOS et Windows · gratuit et open source</p>
     <h1>Sache d'un coup d'œil quand Claude <span class="done-word">a fini</span>.</h1>
     <p class="lead">Lutins pose une petite encoche en haut de ton écran, avec un perso en pixel art pour chaque session Claude Code. Il saute quand il bosse, s'agite quand il t'attend et fait la fête quand c'est fini.</p>
     <div class="cta">
@@ -396,6 +401,15 @@
         <p>L'encoche apparaît, l'app se branche toute seule à Claude Code (avec une sauvegarde de tes réglages) et se lance à chaque démarrage.</p>
         <p>Clique sur <b>Autoriser</b> quand macOS te demande pour les notifications.</p>
         <p>Pour désinstaller : clic droit sur l'encoche → <i>Débrancher de Claude Code et quitter</i>.</p>
+      </div>
+    </div>
+    <div class="card windows">
+      <div>
+        <h3>Sur Windows 10 ou 11</h3>
+        <p>Ouvre <b>PowerShell</b> (touche Windows, « PowerShell »), colle, puis Entrée. Rien d'exécutable n'est téléchargé : le code est compilé sur ton PC.</p>
+      </div>
+      <div>
+        <div class="code"><button class="copy" type="button" data-copy="windows">Copier</button><span class="p">&gt; </span>powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/windows/install.ps1 | iex"</div>
       </div>
     </div>
   </div>
@@ -686,7 +700,9 @@ if (reduceMotion) {
 }
 
 document.querySelectorAll(".copy").forEach(button => button.addEventListener("click", async () => {
-  const text = "curl -fsSL https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/install.sh | bash";
+  const text = button.dataset.copy === "windows"
+    ? 'powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/windows/install.ps1 | iex"'
+    : "curl -fsSL https://raw.githubusercontent.com/lucasjanvierpro-oss/lutins/main/install.sh | bash";
   try { await navigator.clipboard.writeText(text); button.textContent = "Copié !"; }
   catch { button.textContent = "Sélectionne le texte"; }
   setTimeout(() => (button.textContent = "Copier"), 1800);
